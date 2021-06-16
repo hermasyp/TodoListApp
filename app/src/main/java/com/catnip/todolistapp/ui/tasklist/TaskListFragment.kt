@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.catnip.todolistapp.App
 import com.catnip.todolistapp.data.constant.Constant
 import com.catnip.todolistapp.data.datasource.TaskDataSource
 import com.catnip.todolistapp.databinding.FragmentTaskListBinding
@@ -67,8 +68,12 @@ class TaskListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        initList()
         initSwipeRefresh()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        initList()
     }
 
     private fun initList() {
@@ -81,12 +86,17 @@ class TaskListFragment : Fragment() {
             layoutManager = LinearLayoutManager(context)
             adapter = this@TaskListFragment.adapter
         }
-        adapter.items = TaskDataSource().getTaskByStatus(isFilteredByTaskStatus)
+        (activity?.application as App).getDataSource()?.getTaskByStatus(isFilteredByTaskStatus)?.let {
+            adapter.items = it
+        }
     }
+
     private fun initSwipeRefresh(){
         binding.srlTask.setOnRefreshListener {
             binding.srlTask.isRefreshing = false
-            adapter.items = TaskDataSource().getTaskByStatus(isFilteredByTaskStatus)
+            (activity?.application as App).getDataSource()?.getTaskByStatus(isFilteredByTaskStatus)?.let {
+                adapter.items = it
+            }
         }
     }
 
