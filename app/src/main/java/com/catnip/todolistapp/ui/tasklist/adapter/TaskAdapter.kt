@@ -1,4 +1,4 @@
-package com.catnip.todolistapp.ui.main.adapter;
+package com.catnip.todolistapp.ui.tasklist.adapter;
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -10,7 +10,7 @@ import com.catnip.todolistapp.databinding.ItemTaskBinding
 Written with love by Muhammad Hermas Yuda Pamungkas
 Github : https://github.com/hermasyp
  **/
-class TaskAdapter(val itemClick: (Todo) -> Unit) :
+class TaskAdapter(val itemClick: (Todo,Int) -> Unit) :
     RecyclerView.Adapter<TaskAdapter.TodoViewHolder>() {
 
     var items : List<Todo> = mutableListOf()
@@ -25,19 +25,19 @@ class TaskAdapter(val itemClick: (Todo) -> Unit) :
     }
 
     override fun onBindViewHolder(holder: TodoViewHolder, position: Int) {
-        holder.bindView(items[position])
+        holder.bindView(items[position],position)
     }
 
     override fun getItemCount(): Int = items.size
 
 
-    class TodoViewHolder(private val binding: ItemTaskBinding, val itemClick: (Todo) -> Unit) :
+    class TodoViewHolder(private val binding: ItemTaskBinding, val itemClick: (Todo,Int) -> Unit) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bindView(item: Todo) {
+        fun bindView(item: Todo,position: Int) {
             with(item) {
                 binding.tvTitleItemTask.text = item.title
-                itemView.setOnClickListener { itemClick(this) }
+                itemView.setOnClickListener { itemClick(this,position) }
             }
 
         }

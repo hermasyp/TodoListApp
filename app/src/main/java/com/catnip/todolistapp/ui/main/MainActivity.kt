@@ -1,21 +1,15 @@
 package com.catnip.todolistapp.ui.main
 
-import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.catnip.todolistapp.R
-import com.catnip.todolistapp.data.constant.Constant
-import com.catnip.todolistapp.data.model.Todo
+import androidx.appcompat.app.AppCompatActivity
 import com.catnip.todolistapp.databinding.ActivityMainBinding
-import com.catnip.todolistapp.ui.detail.DetailTaskActivity
-import com.catnip.todolistapp.ui.main.adapter.TaskAdapter
+import com.catnip.todolistapp.ui.tasklist.TaskListFragment
+import com.catnip.todolistapp.utils.views.ViewPagerAdapter
+import com.google.android.material.tabs.TabLayoutMediator
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private lateinit var adapter: TaskAdapter
     private val TAG = MainActivity::class.java.simpleName
 
 
@@ -24,54 +18,20 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        initList()
+        initViewPager()
     }
 
-    private fun initList(){
-        adapter = TaskAdapter {
-            val intent = Intent(this,DetailTaskActivity::class.java)
-            intent.putExtra(Constant.EXTRAS_DATA_TODO,it)
-            startActivity(intent)
+    private fun initViewPager() {
+        val fragmentAdapter = ViewPagerAdapter(supportFragmentManager, lifecycle)
+        fragmentAdapter.addFragment(TaskListFragment.newInstance(false),"Undone Task")
+        fragmentAdapter.addFragment(TaskListFragment.newInstance(true),"Done Task")
+        binding.viewPager.apply {
+            adapter = fragmentAdapter
         }
-        binding.rvTask.apply {
-            layoutManager = LinearLayoutManager(this@MainActivity)
-            adapter = this@MainActivity.adapter
-        }
-        adapter.items = generateDummyData()
+        TabLayoutMediator(binding.tabLayout, binding.viewPager, true) { tab, position ->
+            tab.text = fragmentAdapter.getPageTitle(position)
+        }.attach()
     }
 
-    private fun generateDummyData() : List<Todo>{
-        return mutableListOf<Todo>().apply {
-            add(Todo("Mencuci baju", "Harus mencuci baju orang serumah","https://image-cdn.medkomtek.com/JWQlRCsCKHDuTFy4VN-CTsnMTBQ=/1200x675/smart/klikdokter-media-buckets/medias/2263302/original/061757600_1530255518-Agar-Tidak-Kram-Otot-Hindari-Ini-Saat-Mencuci-Baju-By-birdbyb-stockphoto-shutterstock.jpg"))
-            add(Todo("Working Project : Binar", "Membuat Project Challenge Binar CH 5","https://media.istockphoto.com/vectors/origamisign2orange-vector-id1165147642?b=1&k=6&m=1165147642&s=612x612&w=0&h=gRulyoRq8aKs8GtetjLJHMyJ_4btD-V5zotQ1_ivvHE="))
-            add(Todo("Working Project : Binar 2", "Membuat Project Challenge Binar CH 5 - 1","https://media.istockphoto.com/vectors/origamisign2orange-vector-id1165147642?b=1&k=6&m=1165147642&s=612x612&w=0&h=gRulyoRq8aKs8GtetjLJHMyJ_4btD-V5zotQ1_ivvHE="))
-            add(Todo("Working Project : Binar 3", "Membuat Project Challenge Binar CH 5 - 2","https://media.istockphoto.com/vectors/origamisign2orange-vector-id1165147642?b=1&k=6&m=1165147642&s=612x612&w=0&h=gRulyoRq8aKs8GtetjLJHMyJ_4btD-V5zotQ1_ivvHE="))
-            add(Todo("Working Project : Binar 4", "Membuat Project Challenge Binar CH 5 - 3","https://media.istockphoto.com/vectors/origamisign2orange-vector-id1165147642?b=1&k=6&m=1165147642&s=612x612&w=0&h=gRulyoRq8aKs8GtetjLJHMyJ_4btD-V5zotQ1_ivvHE="))
-        }
-    }
 
-    override fun onPause() {
-        super.onPause()
-        Log.d(TAG, "onPause: ")
-    }
-
-    override fun onResume() {
-        super.onResume()
-        Log.d(TAG, "onResume: ")
-    }
-
-    override fun onStart() {
-        super.onStart()
-        Log.d(TAG, "onStart: ")
-    }
-
-    override fun onStop() {
-        super.onStop()
-        Log.d(TAG, "onStop: ")
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.d(TAG, "onDestroy: ")
-    }
 }

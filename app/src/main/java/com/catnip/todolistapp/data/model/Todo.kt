@@ -11,5 +11,6 @@ Github : https://github.com/hermasyp
 data class Todo (
     val title : String?,
     val desc : String?,
-    val imgHeaderUrl: String?
+    val imgHeaderUrl: String?,
+    var isTaskCompleted: Boolean
 ) : Parcelable
