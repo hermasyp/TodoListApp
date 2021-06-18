@@ -12,9 +12,6 @@ import com.catnip.todolistapp.utils.ShareUtils
 import com.google.android.material.snackbar.Snackbar
 
 
-
-
-
 class DetailTaskActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDetailTaskBinding
     private var todo: Todo? = null

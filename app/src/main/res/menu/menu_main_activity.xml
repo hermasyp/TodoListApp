@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/menu_add_todo"
+        android:title="@string/title_menu_add_todo"
+        android:icon="@drawable/ic_add_todo"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/menu_about"
+        android:icon="@drawable/ic_about"
+        android:title="@string/title_menu_about"
+        app:showAsAction="ifRoom" />
+</menu>

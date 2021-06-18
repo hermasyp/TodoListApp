@@ -1,5 +1,6 @@
 package com.catnip.todolistapp.ui.tasklist
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,8 +9,9 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.catnip.todolistapp.App
+import com.catnip.todolistapp.R
 import com.catnip.todolistapp.data.constant.Constant
-import com.catnip.todolistapp.data.datasource.TaskDataSource
+import com.catnip.todolistapp.data.model.Todo
 import com.catnip.todolistapp.databinding.FragmentTaskListBinding
 import com.catnip.todolistapp.ui.detail.DetailTaskActivity
 import com.catnip.todolistapp.ui.tasklist.adapter.TaskAdapter
@@ -77,27 +79,57 @@ class TaskListFragment : Fragment() {
     }
 
     private fun initList() {
-        adapter = TaskAdapter { item, position ->
+        adapter = TaskAdapter({ todo, pos ->
             val intent = Intent(context, DetailTaskActivity::class.java)
-            intent.putExtra(Constant.EXTRAS_DATA_TODO, item)
+            intent.putExtra(Constant.EXTRAS_DATA_TODO, todo)
             startActivity(intent)
-        }
+        }, { todo, pos ->
+            showDialogDeleteTodo(todo)
+        })
         binding.rvTask.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = this@TaskListFragment.adapter
         }
-        (activity?.application as App).getDataSource()?.getTaskByStatus(isFilteredByTaskStatus)?.let {
-            adapter.items = it
+        loadList()
+
+    }
+
+    private fun loadList(){
+        (activity?.application as App).getDataSource()?.getTaskByStatus(isFilteredByTaskStatus)
+            ?.let {
+                adapter.items = it
+            }
+    }
+
+    private fun initSwipeRefresh() {
+        binding.srlTask.setOnRefreshListener {
+            binding.srlTask.isRefreshing = false
+            (activity?.application as App).getDataSource()?.getTaskByStatus(isFilteredByTaskStatus)
+                ?.let {
+                    adapter.items = it
+                }
         }
     }
 
-    private fun initSwipeRefresh(){
-        binding.srlTask.setOnRefreshListener {
-            binding.srlTask.isRefreshing = false
-            (activity?.application as App).getDataSource()?.getTaskByStatus(isFilteredByTaskStatus)?.let {
-                adapter.items = it
+    private fun showDialogDeleteTodo(todo : Todo) {
+        val alertDialog: AlertDialog? = activity?.let {
+            val builder = AlertDialog.Builder(it)
+            builder.apply {
+                setTitle("Do you want to delete \"${todo.title}\" ?")
+                setPositiveButton(R.string.text_dialog_delete_task_positive) { dialog, id ->
+                    // User clicked OK button
+                    (activity?.application as App).getDataSource()?.deleteTodo(todo.id)
+                    loadList()
+                    dialog?.dismiss()
+                }
+                setNegativeButton(R.string.text_dialog_delete_task_negative) { dialog, id ->
+                    // User cancelled the dialog
+                    dialog?.dismiss()
+                }
             }
+            builder.create()
         }
+        alertDialog?.show()
     }
 
 
