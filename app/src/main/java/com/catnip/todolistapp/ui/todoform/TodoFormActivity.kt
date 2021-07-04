@@ -1,26 +1,61 @@
 package com.catnip.todolistapp.ui.todoform
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.catnip.todolistapp.App
 import com.catnip.todolistapp.R
+import com.catnip.todolistapp.data.local.room.TodoRoomDatabase
+import com.catnip.todolistapp.data.local.room.datasource.TaskDataSource
 import com.catnip.todolistapp.data.model.Todo
 import com.catnip.todolistapp.databinding.ActivityTodoFormBinding
-import kotlin.random.Random
 
 
-class TodoFormActivity : AppCompatActivity() {
+class TodoFormActivity : AppCompatActivity(), TodoFormContract.View {
     private lateinit var binding: ActivityTodoFormBinding
+    private lateinit var presenter: TodoFormContract.Presenter
+    private var todo: Todo? = null
+    private var formMode: Int = 0
+
+    companion object {
+        const val MODE_INSERT = 0
+        const val MODE_EDIT = 1
+
+        const val ARG_MODE = "ARG_MODE"
+        const val ARG_TODO_DATA = "ARG_TODO_DATA"
+
+        fun startActivity(context: Context, formMode: Int, todo: Todo?) {
+            val intent = Intent(context, TodoFormActivity::class.java)
+            intent.putExtra(ARG_MODE, formMode)
+            todo?.let {
+                intent.putExtra(ARG_TODO_DATA, todo)
+            }
+            context.startActivity(intent)
+        }
+
+        fun startActivity(context: Context, formMode: Int) {
+            startActivity(context, formMode, null)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        initView()
+    }
+
+    override fun initView() {
         binding = ActivityTodoFormBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setClick()
-        supportActionBar?.title = getString(R.string.text_title_todo_form_activity)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        //initial presenter
+        val dataSource = TaskDataSource(TodoRoomDatabase.getInstance(this).todoDao())
+        presenter = TodoFormPresenter(dataSource, this)
+        //get intent data
+        getIntentData()
+        initializeForm()
     }
 
     private fun setClick() {
@@ -28,6 +63,7 @@ class TodoFormActivity : AppCompatActivity() {
             saveTodo()
         }
     }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             android.R.id.home -> {
@@ -40,16 +76,18 @@ class TodoFormActivity : AppCompatActivity() {
 
     private fun saveTodo() {
         if (isFormTodoFilled()) {
-            val todo = Todo(
-                Random.nextInt(),
-                binding.etTaskName.text.toString(),
-                binding.etTaskDesc.text.toString(),
-                binding.etTaskHeaderImg.text.toString(),
-                false
-            )
-            (application as App).getDataSource()?.addTodo(todo)
-            Toast.makeText(this, "Todo Saved!", Toast.LENGTH_SHORT).show()
-            finish()
+            todo = todo?.copy()?.apply {
+                title = binding.etTaskName.text.toString()
+                desc = binding.etTaskDesc.text.toString()
+                imgHeaderUrl = binding.etTaskHeaderImg.text.toString()
+            }
+            todo?.let {
+                if (formMode == MODE_INSERT) {
+                    presenter.insertTodo(it)
+                } else {
+                    presenter.updateTodo(it)
+                }
+            }
         }
     }
 
@@ -88,5 +126,31 @@ class TodoFormActivity : AppCompatActivity() {
         return isFormValid
     }
 
+    override fun onSuccess() {
+        Toast.makeText(this, "Todo Saved!", Toast.LENGTH_SHORT).show()
+        finish()
+    }
 
+    override fun onFailed() {
+        Toast.makeText(this, "Failed to save Todo", Toast.LENGTH_SHORT).show()
+        finish()
+    }
+
+    override fun getIntentData() {
+        formMode = intent.getIntExtra(ARG_MODE, 0)
+        todo = intent.getParcelableExtra(ARG_TODO_DATA)
+    }
+
+    override fun initializeForm() {
+        if (formMode == MODE_EDIT) {
+            todo?.let {
+                binding.etTaskName.setText(it.title)
+                binding.etTaskDesc.setText(it.desc)
+                binding.etTaskHeaderImg.setText(it.imgHeaderUrl)
+            }
+            supportActionBar?.title = getString(R.string.text_title_edit_todo_form_activity)
+        }else{
+            supportActionBar?.title = getString(R.string.text_title_todo_form_activity)
+        }
+    }
 }

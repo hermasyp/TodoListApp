@@ -18,4 +18,5 @@
     <string name="text_about_profession">Android Developer @Alodokter</string>
     <string name="text_button_about">Check my Repo !</string>
     <string name="text_dialog_about_title">About Developer</string>
+    <string name="text_title_edit_todo_form_activity">Edit Todo</string>
 </resources>

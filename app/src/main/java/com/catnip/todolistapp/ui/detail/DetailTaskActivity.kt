@@ -3,11 +3,11 @@ package com.catnip.todolistapp.ui.detail
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
-import com.catnip.todolistapp.App
 import com.catnip.todolistapp.R
 import com.catnip.todolistapp.data.constant.Constant
 import com.catnip.todolistapp.data.model.Todo
 import com.catnip.todolistapp.databinding.ActivityDetailTaskBinding
+import com.catnip.todolistapp.ui.todoform.TodoFormActivity
 import com.catnip.todolistapp.utils.ShareUtils
 import com.google.android.material.snackbar.Snackbar
 
@@ -40,16 +40,21 @@ class DetailTaskActivity : AppCompatActivity() {
         binding.ivShare.setOnClickListener {
             ShareUtils.shareText(this, "Title Task : ${todo?.title}\nDesc Task :  ${todo?.desc}")
         }
+        binding.ivEditTodo.setOnClickListener {
+            TodoFormActivity.startActivity(this, TodoFormActivity.MODE_EDIT, todo)
+        }
         setFabIcon()
         binding.fab.setOnClickListener {
             todo?.let {
-                (application as App).getDataSource()?.changeStatusTodo(it.id)
+                //(application as App).getDataSource()?.changeStatusTodo(it.id)
                 todo = todo?.apply { isTaskCompleted = isTaskCompleted.not() }
                 setFabIcon()
-                if(todo?.isTaskCompleted == true){
-                    Snackbar.make(binding.root, "Success Set Todo to Done", Snackbar.LENGTH_SHORT).show()
-                }else{
-                    Snackbar.make(binding.root, "Success Set Todo to Undone", Snackbar.LENGTH_SHORT).show()
+                if (todo?.isTaskCompleted == true) {
+                    Snackbar.make(binding.root, "Success Set Todo to Done", Snackbar.LENGTH_SHORT)
+                        .show()
+                } else {
+                    Snackbar.make(binding.root, "Success Set Todo to Undone", Snackbar.LENGTH_SHORT)
+                        .show()
                 }
             }
         }

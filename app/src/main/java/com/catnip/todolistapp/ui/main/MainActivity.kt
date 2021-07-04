@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun navigateToTodoForm() {
-        startActivity(Intent(this, TodoFormActivity::class.java))
+        TodoFormActivity.startActivity(this, TodoFormActivity.MODE_INSERT)
     }
 
     private fun openDialogAbout() {

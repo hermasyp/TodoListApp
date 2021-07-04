@@ -3,46 +3,33 @@ package com.catnip.todolistapp.ui.tasklist
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.catnip.todolistapp.App
 import com.catnip.todolistapp.R
 import com.catnip.todolistapp.data.constant.Constant
+import com.catnip.todolistapp.data.local.room.TodoRoomDatabase
+import com.catnip.todolistapp.data.local.room.datasource.TaskDataSource
 import com.catnip.todolistapp.data.model.Todo
 import com.catnip.todolistapp.databinding.FragmentTaskListBinding
 import com.catnip.todolistapp.ui.detail.DetailTaskActivity
 import com.catnip.todolistapp.ui.tasklist.adapter.TaskAdapter
 
-// TODO: Rename parameter arguments, choose names that match
-
-/**
- * A simple [Fragment] subclass.
- * Use the [TaskListFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class TaskListFragment : Fragment() {
-    // TODO: Rename and change types of parameters
+class TaskListFragment : Fragment(), TaskListContract.View {
+    private val TAG = TaskListFragment::class.java.simpleName
     private var isFilteredByTaskStatus: Boolean = false
     private lateinit var binding: FragmentTaskListBinding
     private lateinit var adapter: TaskAdapter
 
+    private lateinit var presenter: TaskListContract.Presenter
 
     companion object {
-        // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
         private const val ARG_FILTERED_TASK = "ARG_FILTERED_TASK"
 
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment TaskListFragment.
-         */
-        // TODO: Rename and change types and number of parameters
         @JvmStatic
         fun newInstance(isFilterTaskByDone: Boolean) =
             TaskListFragment().apply {
@@ -70,15 +57,15 @@ class TaskListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        initSwipeRefresh()
+        initView()
     }
 
     override fun onResume() {
         super.onResume()
-        initList()
+        presenter.getTodosByCompleteness(isFilteredByTaskStatus)
     }
 
-    private fun initList() {
+    override fun initList() {
         adapter = TaskAdapter({ todo, pos ->
             val intent = Intent(context, DetailTaskActivity::class.java)
             intent.putExtra(Constant.EXTRAS_DATA_TODO, todo)
@@ -90,36 +77,24 @@ class TaskListFragment : Fragment() {
             layoutManager = LinearLayoutManager(context)
             adapter = this@TaskListFragment.adapter
         }
-        loadList()
-
     }
 
-    private fun loadList(){
-        (activity?.application as App).getDataSource()?.getTaskByStatus(isFilteredByTaskStatus)
-            ?.let {
-                adapter.items = it
-            }
-    }
 
     private fun initSwipeRefresh() {
         binding.srlTask.setOnRefreshListener {
             binding.srlTask.isRefreshing = false
-            (activity?.application as App).getDataSource()?.getTaskByStatus(isFilteredByTaskStatus)
-                ?.let {
-                    adapter.items = it
-                }
+            presenter.getTodosByCompleteness(isFilteredByTaskStatus)
         }
     }
 
-    private fun showDialogDeleteTodo(todo : Todo) {
+    private fun showDialogDeleteTodo(todo: Todo) {
         val alertDialog: AlertDialog? = activity?.let {
             val builder = AlertDialog.Builder(it)
             builder.apply {
                 setTitle("Do you want to delete \"${todo.title}\" ?")
                 setPositiveButton(R.string.text_dialog_delete_task_positive) { dialog, id ->
                     // User clicked OK button
-                    (activity?.application as App).getDataSource()?.deleteTodo(todo.id)
-                    loadList()
+                    presenter.deleteTodo(todo)
                     dialog?.dismiss()
                 }
                 setNegativeButton(R.string.text_dialog_delete_task_negative) { dialog, id ->
@@ -130,6 +105,37 @@ class TaskListFragment : Fragment() {
             builder.create()
         }
         alertDialog?.show()
+    }
+
+    override fun onDataSuccess(todo: List<Todo>) {
+        todo.let {
+            adapter.items = it
+        }
+    }
+
+    override fun onDataEmpty() {
+        Log.d(TAG, "onDataEmpty: ")
+    }
+
+    override fun onDataFailed(msg: String?) {
+        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onDeleteDataSuccess() {
+        presenter.getTodosByCompleteness(isFilteredByTaskStatus)
+    }
+
+    override fun onDeleteDataFailed() {
+        Toast.makeText(context, "Delete Data Failed", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun initView() {
+        context?.let {
+            val dataSource = TaskDataSource(TodoRoomDatabase.getInstance(it).todoDao())
+            presenter = TaskListPresenter(dataSource, this)
+        }
+        initSwipeRefresh()
+        initList()
     }
 
 
