@@ -1,6 +1,5 @@
 package com.catnip.todolistapp.ui.main
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -9,7 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.catnip.todolistapp.R
 import com.catnip.todolistapp.databinding.ActivityMainBinding
 import com.catnip.todolistapp.ui.about.AboutDialogFragment
-import com.catnip.todolistapp.ui.tasklist.TaskListFragment
+import com.catnip.todolistapp.ui.tasklist.TodoListFragment
 import com.catnip.todolistapp.ui.todoform.TodoFormActivity
 import com.catnip.todolistapp.utils.views.ViewPagerAdapter
 import com.google.android.material.tabs.TabLayoutMediator
@@ -48,8 +47,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun initViewPager() {
         val fragmentAdapter = ViewPagerAdapter(supportFragmentManager, lifecycle)
-        fragmentAdapter.addFragment(TaskListFragment.newInstance(false), "Undone Task")
-        fragmentAdapter.addFragment(TaskListFragment.newInstance(true), "Done Task")
+        fragmentAdapter.addFragment(TodoListFragment.newInstance(false), "Undone Task")
+        fragmentAdapter.addFragment(TodoListFragment.newInstance(true), "Done Task")
         binding.viewPager.apply {
             adapter = fragmentAdapter
         }

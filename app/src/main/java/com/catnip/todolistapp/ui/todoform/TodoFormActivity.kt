@@ -8,7 +8,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.catnip.todolistapp.R
 import com.catnip.todolistapp.data.local.room.TodoRoomDatabase
-import com.catnip.todolistapp.data.local.room.datasource.TaskDataSource
+import com.catnip.todolistapp.data.local.room.datasource.TodoDataSource
 import com.catnip.todolistapp.data.model.Todo
 import com.catnip.todolistapp.databinding.ActivityTodoFormBinding
 
@@ -51,7 +51,7 @@ class TodoFormActivity : AppCompatActivity(), TodoFormContract.View {
         setClick()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         //initial presenter
-        val dataSource = TaskDataSource(TodoRoomDatabase.getInstance(this).todoDao())
+        val dataSource = TodoDataSource(TodoRoomDatabase.getInstance(this).todoDao())
         presenter = TodoFormPresenter(dataSource, this)
         //get intent data
         getIntentData()
@@ -76,10 +76,18 @@ class TodoFormActivity : AppCompatActivity(), TodoFormContract.View {
 
     private fun saveTodo() {
         if (isFormTodoFilled()) {
-            todo = todo?.copy()?.apply {
-                title = binding.etTaskName.text.toString()
-                desc = binding.etTaskDesc.text.toString()
-                imgHeaderUrl = binding.etTaskHeaderImg.text.toString()
+            if (formMode == MODE_EDIT) {
+                todo = todo?.copy()?.apply {
+                    title = binding.etTaskName.text.toString()
+                    desc = binding.etTaskDesc.text.toString()
+                    imgHeaderUrl = binding.etTaskHeaderImg.text.toString()
+                }
+            } else {
+                todo = Todo(
+                    title = binding.etTaskName.text.toString(),
+                    desc = binding.etTaskDesc.text.toString(),
+                    imgHeaderUrl = binding.etTaskHeaderImg.text.toString()
+                )
             }
             todo?.let {
                 if (formMode == MODE_INSERT) {
@@ -149,7 +157,7 @@ class TodoFormActivity : AppCompatActivity(), TodoFormContract.View {
                 binding.etTaskHeaderImg.setText(it.imgHeaderUrl)
             }
             supportActionBar?.title = getString(R.string.text_title_edit_todo_form_activity)
-        }else{
+        } else {
             supportActionBar?.title = getString(R.string.text_title_todo_form_activity)
         }
     }

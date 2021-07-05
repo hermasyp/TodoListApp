@@ -1,6 +1,5 @@
 package com.catnip.todolistapp.data.local.room.datasource
 
-import com.catnip.todolistapp.data.local.room.TodoRoomDatabase
 import com.catnip.todolistapp.data.local.room.dao.TodoDao
 import com.catnip.todolistapp.data.model.Todo
 
@@ -8,9 +7,13 @@ import com.catnip.todolistapp.data.model.Todo
 Written with love by Muhammad Hermas Yuda Pamungkas
 Github : https://github.com/hermasyp
  **/
-class TaskDataSource(private val todoDao: TodoDao) {
+class TodoDataSource(private val todoDao: TodoDao) {
 
-    suspend fun addTodo(todo: Todo) : Long {
+    suspend fun getTodoById(todoID : Int) : Todo{
+        return todoDao.getTodoById(todoID)
+    }
+
+    suspend fun addTodo(todo: Todo): Long {
         return todoDao.insertTodo(todo)
     }
 
@@ -18,8 +21,16 @@ class TaskDataSource(private val todoDao: TodoDao) {
         todoDao.deleteTodo(todo)
     }
 
-    suspend fun updateTodo(todo: Todo) : Int {
+    suspend fun updateTodo(todo: Todo): Int {
         return todoDao.updateTodo(todo)
+    }
+
+    suspend fun changeTodoStatus(todo: Todo): Todo {
+        val updatedTodo = todo.copy().apply {
+            this.isTaskCompleted = isTaskCompleted.not()
+        }
+        todoDao.updateTodo(updatedTodo)
+        return getTodoById(todo.id)
     }
 
     suspend fun getTodoByCompleteness(isTaskCompleted: Boolean): List<Todo> {

@@ -10,7 +10,7 @@ Github : https://github.com/hermasyp
  **/
 open class BasePresenter : BaseContract.BasePresenter{
     private val coroutineJob =  Job()
-    val scope = CoroutineScope(Dispatchers.Main + coroutineJob)
+    val scope = CoroutineScope(Dispatchers.IO + coroutineJob)
     override fun onDestroy() {
         coroutineJob.cancel()
     }

@@ -13,26 +13,26 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.catnip.todolistapp.R
 import com.catnip.todolistapp.data.constant.Constant
 import com.catnip.todolistapp.data.local.room.TodoRoomDatabase
-import com.catnip.todolistapp.data.local.room.datasource.TaskDataSource
+import com.catnip.todolistapp.data.local.room.datasource.TodoDataSource
 import com.catnip.todolistapp.data.model.Todo
 import com.catnip.todolistapp.databinding.FragmentTaskListBinding
-import com.catnip.todolistapp.ui.detail.DetailTaskActivity
-import com.catnip.todolistapp.ui.tasklist.adapter.TaskAdapter
+import com.catnip.todolistapp.ui.detail.DetailTodoActivity
+import com.catnip.todolistapp.ui.tasklist.adapter.TodoAdapter
 
-class TaskListFragment : Fragment(), TaskListContract.View {
-    private val TAG = TaskListFragment::class.java.simpleName
+class TodoListFragment : Fragment(), TodoListContract.View {
+    private val TAG = TodoListFragment::class.java.simpleName
     private var isFilteredByTaskStatus: Boolean = false
     private lateinit var binding: FragmentTaskListBinding
-    private lateinit var adapter: TaskAdapter
+    private lateinit var adapter: TodoAdapter
 
-    private lateinit var presenter: TaskListContract.Presenter
+    private lateinit var presenter: TodoListContract.Presenter
 
     companion object {
         private const val ARG_FILTERED_TASK = "ARG_FILTERED_TASK"
 
         @JvmStatic
         fun newInstance(isFilterTaskByDone: Boolean) =
-            TaskListFragment().apply {
+            TodoListFragment().apply {
                 arguments = Bundle().apply {
                     putBoolean(ARG_FILTERED_TASK, isFilterTaskByDone)
                 }
@@ -62,20 +62,20 @@ class TaskListFragment : Fragment(), TaskListContract.View {
 
     override fun onResume() {
         super.onResume()
-        presenter.getTodosByCompleteness(isFilteredByTaskStatus)
+        getData()
     }
 
     override fun initList() {
-        adapter = TaskAdapter({ todo, pos ->
-            val intent = Intent(context, DetailTaskActivity::class.java)
-            intent.putExtra(Constant.EXTRAS_DATA_TODO, todo)
+        adapter = TodoAdapter({ todo, pos ->
+            val intent = Intent(context, DetailTodoActivity::class.java)
+            intent.putExtra(Constant.EXTRAS_DATA_TODO, todo.id)
             startActivity(intent)
         }, { todo, pos ->
             showDialogDeleteTodo(todo)
         })
         binding.rvTask.apply {
             layoutManager = LinearLayoutManager(context)
-            adapter = this@TaskListFragment.adapter
+            adapter = this@TodoListFragment.adapter
         }
     }
 
@@ -83,7 +83,7 @@ class TaskListFragment : Fragment(), TaskListContract.View {
     private fun initSwipeRefresh() {
         binding.srlTask.setOnRefreshListener {
             binding.srlTask.isRefreshing = false
-            presenter.getTodosByCompleteness(isFilteredByTaskStatus)
+            getData()
         }
     }
 
@@ -109,12 +109,15 @@ class TaskListFragment : Fragment(), TaskListContract.View {
 
     override fun onDataSuccess(todo: List<Todo>) {
         todo.let {
+            setEmptyState(false)
             adapter.items = it
         }
     }
 
     override fun onDataEmpty() {
         Log.d(TAG, "onDataEmpty: ")
+        adapter.items = mutableListOf()
+        setEmptyState(true)
     }
 
     override fun onDataFailed(msg: String?) {
@@ -122,7 +125,7 @@ class TaskListFragment : Fragment(), TaskListContract.View {
     }
 
     override fun onDeleteDataSuccess() {
-        presenter.getTodosByCompleteness(isFilteredByTaskStatus)
+        getData()
     }
 
     override fun onDeleteDataFailed() {
@@ -131,12 +134,24 @@ class TaskListFragment : Fragment(), TaskListContract.View {
 
     override fun initView() {
         context?.let {
-            val dataSource = TaskDataSource(TodoRoomDatabase.getInstance(it).todoDao())
-            presenter = TaskListPresenter(dataSource, this)
+            val dataSource = TodoDataSource(TodoRoomDatabase.getInstance(it).todoDao())
+            presenter = TodoListPresenter(dataSource, this)
         }
         initSwipeRefresh()
         initList()
     }
 
+    override fun getData() {
+        presenter.getTodosByCompleteness(isFilteredByTaskStatus)
+    }
 
+    override fun setLoadingStatus(isLoading: Boolean) {
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+    }
+
+    override fun setEmptyState(isDataEmpty: Boolean) {
+        binding.tvMessage.text = getString(R.string.text_empty_data)
+        binding.tvMessage.visibility = if (isDataEmpty) View.VISIBLE else View.GONE
+
+    }
 }

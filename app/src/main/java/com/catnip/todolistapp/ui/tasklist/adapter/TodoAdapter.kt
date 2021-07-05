@@ -10,8 +10,8 @@ import com.catnip.todolistapp.databinding.ItemTaskBinding
 Written with love by Muhammad Hermas Yuda Pamungkas
 Github : https://github.com/hermasyp
  **/
-class TaskAdapter(val itemClick: (Todo, Int) -> Unit, val longClick: (Todo, Int) -> Unit) :
-    RecyclerView.Adapter<TaskAdapter.TodoViewHolder>() {
+class TodoAdapter(val itemClick: (Todo, Int) -> Unit, val longClick: (Todo, Int) -> Unit) :
+    RecyclerView.Adapter<TodoAdapter.TodoViewHolder>() {
 
     var items: List<Todo> = mutableListOf()
         set(value) {
@@ -29,6 +29,7 @@ class TaskAdapter(val itemClick: (Todo, Int) -> Unit, val longClick: (Todo, Int)
     }
 
     override fun getItemCount(): Int = items.size
+
 
 
     class TodoViewHolder(

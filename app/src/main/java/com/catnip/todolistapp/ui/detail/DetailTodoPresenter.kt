@@ -1,4 +1,4 @@
-package com.catnip.todolistapp.ui.todoform
+package com.catnip.todolistapp.ui.detail
 
 import com.catnip.todolistapp.base.BasePresenter
 import com.catnip.todolistapp.data.local.room.datasource.TodoDataSource
@@ -10,45 +10,39 @@ import kotlinx.coroutines.launch
 Written with love by Muhammad Hermas Yuda Pamungkas
 Github : https://github.com/hermasyp
  **/
-class TodoFormPresenter(
+class DetailTodoPresenter(
     private val dataSource: TodoDataSource,
-    private val view: TodoFormContract.View
-) : BasePresenter(), TodoFormContract.Presenter {
-    override fun insertTodo(todo: Todo) {
+    private val view: DetailTodoContract.View
+) : BasePresenter(), DetailTodoContract.Presenter {
+    override fun getDetailTodo(todoId: Int) {
         scope.launch {
             try {
-                val todoId = dataSource.addTodo(todo)
+                val todo = dataSource.getTodoById(todoId)
                 scope.launch (Dispatchers.Main){
-                    if (todoId > 0) {
-                        view.onSuccess()
-                    } else {
-                        view.onFailed()
-                    }
+                    view.onFetchDetailSuccess(todo)
                 }
+
             } catch (e: Exception) {
                 scope.launch (Dispatchers.Main){
-                    view.onFailed()
+                    view.onFetchDetailFailed()
                 }
             }
         }
     }
 
-    override fun updateTodo(todo: Todo) {
+    override fun changeStatusTodo(todo: Todo) {
         scope.launch {
             try {
-                val todoId = dataSource.updateTodo(todo)
+                val todoResult = dataSource.changeTodoStatus(todo)
                 scope.launch (Dispatchers.Main){
-                    if (todoId > 0) {
-                        view.onSuccess()
-                    } else {
-                        view.onFailed()
-                    }
+                    view.onChangeTodoStatusSuccess(todoResult)
                 }
             } catch (e: Exception) {
                 scope.launch (Dispatchers.Main){
-                    view.onFailed()
+                    view.onChangeTodoStatusFailed()
                 }
             }
         }
     }
+
 }
