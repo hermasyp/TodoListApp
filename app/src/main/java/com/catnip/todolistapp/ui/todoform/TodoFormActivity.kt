@@ -161,4 +161,9 @@ class TodoFormActivity : AppCompatActivity(), TodoFormContract.View {
             supportActionBar?.title = getString(R.string.text_title_todo_form_activity)
         }
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        presenter.onDestroy()
+    }
 }

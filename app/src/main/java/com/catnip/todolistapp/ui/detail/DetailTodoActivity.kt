@@ -91,6 +91,11 @@ class DetailTodoActivity : AppCompatActivity(), DetailTodoContract.View {
 
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        presenter.onDestroy()
+    }
+
     override fun onResume() {
         super.onResume()
         todoId?.let {

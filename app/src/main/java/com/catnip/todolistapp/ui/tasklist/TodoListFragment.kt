@@ -65,6 +65,11 @@ class TodoListFragment : Fragment(), TodoListContract.View {
         getData()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        presenter.onDestroy()
+    }
+
     override fun initList() {
         adapter = TodoAdapter({ todo, pos ->
             val intent = Intent(context, DetailTodoActivity::class.java)
