@@ -12,17 +12,20 @@ import com.catnip.todolistapp.data.local.room.datasource.TodoDataSource
 import com.catnip.todolistapp.data.model.Todo
 import com.catnip.todolistapp.databinding.ActivityTodoFormBinding
 
-
+/*
+* Function :
+* 1. Input data
+* 2. Edit data.
+* */
 class TodoFormActivity : AppCompatActivity(), TodoFormContract.View {
     private lateinit var binding: ActivityTodoFormBinding
     private lateinit var presenter: TodoFormContract.Presenter
+    private var formMode: Int = MODE_INSERT
     private var todo: Todo? = null
-    private var formMode: Int = 0
 
     companion object {
         const val MODE_INSERT = 0
         const val MODE_EDIT = 1
-
         const val ARG_MODE = "ARG_MODE"
         const val ARG_TODO_DATA = "ARG_TODO_DATA"
 
@@ -45,19 +48,6 @@ class TodoFormActivity : AppCompatActivity(), TodoFormContract.View {
         initView()
     }
 
-    override fun initView() {
-        binding = ActivityTodoFormBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        setClick()
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        //initial presenter
-        val dataSource = TodoDataSource(TodoRoomDatabase.getInstance(this).todoDao())
-        presenter = TodoFormPresenter(dataSource, this)
-        //get intent data
-        getIntentData()
-        initializeForm()
-    }
-
     private fun setClick() {
         binding.btnSaveTask.setOnClickListener {
             saveTodo()
@@ -77,24 +67,21 @@ class TodoFormActivity : AppCompatActivity(), TodoFormContract.View {
     private fun saveTodo() {
         if (isFormTodoFilled()) {
             if (formMode == MODE_EDIT) {
+                // do edit
                 todo = todo?.copy()?.apply {
                     title = binding.etTaskName.text.toString()
                     desc = binding.etTaskDesc.text.toString()
                     imgHeaderUrl = binding.etTaskHeaderImg.text.toString()
                 }
+                todo?.let { presenter.updateTodo(it) }
             } else {
+                //do insert
                 todo = Todo(
                     title = binding.etTaskName.text.toString(),
                     desc = binding.etTaskDesc.text.toString(),
-                    imgHeaderUrl = binding.etTaskHeaderImg.text.toString()
+                    imgHeaderUrl = binding.etTaskHeaderImg.text.toString(),
                 )
-            }
-            todo?.let {
-                if (formMode == MODE_INSERT) {
-                    presenter.insertTodo(it)
-                } else {
-                    presenter.updateTodo(it)
-                }
+                todo?.let { presenter.insertTodo(it) }
             }
         }
     }
@@ -134,13 +121,20 @@ class TodoFormActivity : AppCompatActivity(), TodoFormContract.View {
         return isFormValid
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        presenter.onDestroy()
+    }
+
     override fun onSuccess() {
-        Toast.makeText(this, "Todo Saved!", Toast.LENGTH_SHORT).show()
+        //when save data success
+        Toast.makeText(this, "Save todo Success!", Toast.LENGTH_SHORT).show()
         finish()
     }
 
     override fun onFailed() {
-        Toast.makeText(this, "Failed to save Todo", Toast.LENGTH_SHORT).show()
+        //when save data failed
+        Toast.makeText(this, "Save todo Failed!", Toast.LENGTH_SHORT).show()
         finish()
     }
 
@@ -150,20 +144,33 @@ class TodoFormActivity : AppCompatActivity(), TodoFormContract.View {
     }
 
     override fun initializeForm() {
+        //initialize presenter
+        val dataSource = TodoDataSource(TodoRoomDatabase.getInstance(this).todoDao())
+        presenter = TodoFormPresenter(dataSource, this)
+        //preset data when form mode is edit mode
         if (formMode == MODE_EDIT) {
             todo?.let {
                 binding.etTaskName.setText(it.title)
                 binding.etTaskDesc.setText(it.desc)
                 binding.etTaskHeaderImg.setText(it.imgHeaderUrl)
             }
+            //"Edit Data"
             supportActionBar?.title = getString(R.string.text_title_edit_todo_form_activity)
         } else {
             supportActionBar?.title = getString(R.string.text_title_todo_form_activity)
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        presenter.onDestroy()
+    override fun initView() {
+        binding = ActivityTodoFormBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        setClick()
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        //get intent data
+        getIntentData()
+        //initialize form if edit or insert
+        initializeForm()
     }
+
+
 }
