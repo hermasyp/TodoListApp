@@ -1,6 +1,6 @@
 package com.catnip.todolistapp.ui.detail
 
-import com.catnip.todolistapp.base.BasePresenter
+import com.catnip.todolistapp.base.BasePresenterImpl
 import com.catnip.todolistapp.data.local.room.datasource.TodoDataSource
 import com.catnip.todolistapp.data.model.Todo
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +13,7 @@ Github : https://github.com/hermasyp
 class DetailTodoPresenter(
     private val dataSource: TodoDataSource,
     private val view: DetailTodoContract.View
-) : BasePresenter(), DetailTodoContract.Presenter {
+) : BasePresenterImpl(), DetailTodoContract.Presenter {
     override fun getDetailTodo(todoId: Int) {
         scope.launch {
             try {

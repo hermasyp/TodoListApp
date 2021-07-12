@@ -17,8 +17,8 @@ class TodoDataSource(private val todoDao: TodoDao) {
         return todoDao.insertTodo(todo)
     }
 
-    suspend fun deleteTodo(todo: Todo) {
-        todoDao.deleteTodo(todo)
+    suspend fun deleteTodo(todo: Todo) : Int {
+        return todoDao.deleteTodo(todo)
     }
 
     suspend fun updateTodo(todo: Todo): Int {

@@ -8,7 +8,7 @@ import kotlinx.coroutines.Job
 Written with love by Muhammad Hermas Yuda Pamungkas
 Github : https://github.com/hermasyp
  **/
-open class BasePresenter : BaseContract.BasePresenter{
+open class BasePresenterImpl : BaseContract.BasePresenter{
     private val coroutineJob =  Job()
     val scope = CoroutineScope(Dispatchers.IO + coroutineJob)
     override fun onDestroy() {

@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
+import com.catnip.todolistapp.App
 import com.catnip.todolistapp.R
 import com.catnip.todolistapp.data.constant.Constant
 import com.catnip.todolistapp.data.local.room.TodoRoomDatabase
@@ -15,25 +16,22 @@ import com.catnip.todolistapp.utils.ShareUtils
 import com.google.android.material.snackbar.Snackbar
 
 
-class DetailTodoActivity : AppCompatActivity(), DetailTodoContract.View {
+class DetailTodoActivity : AppCompatActivity(),DetailTodoContract.View {
     private lateinit var binding: ActivityDetailTaskBinding
     private lateinit var presenter: DetailTodoContract.Presenter
-    private var todoId: Int? = -1
+    private var todoId : Int? = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityDetailTaskBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        supportActionBar?.hide()
-        getIntentData()
         initView()
     }
 
     private fun getIntentData() {
-        todoId = intent?.getIntExtra(Constant.EXTRAS_DATA_TODO, -1)
+        todoId = intent?.getIntExtra(Constant.EXTRAS_DATA_TODO,-1)
     }
 
-    override fun bindTodoData(todo: Todo?) {
+    private fun bindData(todo : Todo?) {
+        supportActionBar?.hide()
         binding.tvDescTask.text = todo?.desc
         binding.tvTitleTask.text = todo?.title
         Glide.with(this)
@@ -44,21 +42,19 @@ class DetailTodoActivity : AppCompatActivity(), DetailTodoContract.View {
         binding.ivShare.setOnClickListener {
             ShareUtils.shareText(this, "Title Task : ${todo?.title}\nDesc Task :  ${todo?.desc}")
         }
-        binding.ivEditTodo.setOnClickListener {
-            TodoFormActivity.startActivity(this, TodoFormActivity.MODE_EDIT, todo)
-        }
-        todo?.let {
-            setFabIcon(it)
-        }
+        setFabIcon(todo)
         binding.fab.setOnClickListener {
             todo?.let {
-                presenter.changeStatusTodo(todo)
+                presenter.changeStatusTodo(it)
             }
+        }
+        binding.ivEditTodo.setOnClickListener {
+            TodoFormActivity.startActivity(this,TodoFormActivity.MODE_EDIT,todo)
         }
     }
 
-    private fun setFabIcon(todo : Todo) {
-        binding.fab.setImageResource(if (todo.isTaskCompleted) R.drawable.ic_task_done_true else R.drawable.ic_task_done_false)
+    private fun setFabIcon(todo : Todo?) {
+        binding.fab.setImageResource(if (todo?.isTaskCompleted == true) R.drawable.ic_task_done_true else R.drawable.ic_task_done_false)
     }
 
     override fun onFetchDetailSuccess(todo: Todo) {
@@ -66,7 +62,7 @@ class DetailTodoActivity : AppCompatActivity(), DetailTodoContract.View {
     }
 
     override fun onFetchDetailFailed() {
-        Toast.makeText(this, "Fetch Data Failed", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Get Data Failed for id $todoId", Toast.LENGTH_SHORT).show()
     }
 
     override fun onChangeTodoStatusSuccess(todo: Todo) {
@@ -78,17 +74,28 @@ class DetailTodoActivity : AppCompatActivity(), DetailTodoContract.View {
             Snackbar.make(binding.root, "Success Set Todo to Undone", Snackbar.LENGTH_SHORT)
                 .show()
         }
-        setFabIcon(todo)
     }
 
     override fun onChangeTodoStatusFailed() {
-        Toast.makeText(this, "Change Todo Status Failed", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Change todo status Failed", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun bindTodoData(todo: Todo?) {
+        bindData(todo)
+    }
+
+    override fun getData() {
+        todoId?.let { presenter.getDetailTodo(it) }
     }
 
     override fun initView() {
+        binding = ActivityDetailTaskBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        supportActionBar?.hide()
+        getIntentData()
+        //initialize presenter
         val dataSource = TodoDataSource(TodoRoomDatabase.getInstance(this).todoDao())
-        presenter = DetailTodoPresenter(dataSource, this)
-
+        presenter = DetailTodoPresenter(dataSource,this)
     }
 
     override fun onDestroy() {
@@ -98,9 +105,7 @@ class DetailTodoActivity : AppCompatActivity(), DetailTodoContract.View {
 
     override fun onResume() {
         super.onResume()
-        todoId?.let {
-            presenter.getDetailTodo(it)
-        }
+        getData()
     }
 
 }

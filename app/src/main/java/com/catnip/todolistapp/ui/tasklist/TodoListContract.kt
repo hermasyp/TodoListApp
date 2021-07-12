@@ -8,24 +8,28 @@ Written with love by Muhammad Hermas Yuda Pamungkas
 Github : https://github.com/hermasyp
  **/
 interface TodoListContract {
-    interface Presenter : BaseContract.BasePresenter {
-        fun getTodosByCompleteness(isTaskComplete: Boolean)
-        fun deleteTodo(todo: Todo)
-    }
-
-    interface View : BaseContract.BaseView {
+    interface View : BaseContract.BaseView{
+        //getting data from presenter
         fun getData()
 
-        fun onDataSuccess(todo: List<Todo>)
+        //callback get data
+        fun onDataSuccess(todos : List<Todo>)
+        fun onDataFailed(msg : String?)
         fun onDataEmpty()
-        fun onDataFailed(msg: String?)
 
+        //callback when delete data
         fun onDeleteDataSuccess()
         fun onDeleteDataFailed()
 
+        // set loading state and message visibility
         fun setLoadingStatus(isLoading : Boolean)
-        fun setEmptyState(isDataEmpty : Boolean)
+        fun setEmptyStateVisibility(isDataEmpty : Boolean)
 
+        //initialize list
         fun initList()
+    }
+    interface Presenter : BaseContract.BasePresenter{
+        fun getTodoByCompleteness(isTaskComplete : Boolean)
+        fun deleteTodo(todo: Todo)
     }
 }

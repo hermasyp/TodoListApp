@@ -1,6 +1,6 @@
 package com.catnip.todolistapp.ui.tasklist
 
-import com.catnip.todolistapp.base.BasePresenter
+import com.catnip.todolistapp.base.BasePresenterImpl
 import com.catnip.todolistapp.data.local.room.datasource.TodoDataSource
 import com.catnip.todolistapp.data.model.Todo
 import kotlinx.coroutines.Dispatchers
@@ -13,27 +13,32 @@ Github : https://github.com/hermasyp
 class TodoListPresenter(
     private val dataSource: TodoDataSource,
     private val view: TodoListContract.View
-) :
-    BasePresenter(),
-    TodoListContract.Presenter {
+) : BasePresenterImpl(), TodoListContract.Presenter {
 
-    override fun getTodosByCompleteness(isTaskComplete: Boolean) {
+    override fun getTodoByCompleteness(isTaskComplete: Boolean) {
         view.setLoadingStatus(true)
         scope.launch {
             try {
                 val todos = dataSource.getTodoByCompleteness(isTaskComplete)
-                scope.launch (Dispatchers.Main){
+                scope.launch(Dispatchers.Main) {
+                    //check if data is empty
                     if (!todos.isNullOrEmpty()) {
+                        //data is not empty
                         view.onDataSuccess(todos)
+                        view.setEmptyStateVisibility(false)
                     } else {
+                        //data empty
                         view.onDataEmpty()
+                        view.setEmptyStateVisibility(true)
                     }
                     view.setLoadingStatus(false)
                 }
             } catch (e: Exception) {
-                scope.launch (Dispatchers.Main){
+                scope.launch(Dispatchers.Main) {
+                    //when getting data is error
                     view.onDataFailed(e.message)
                     view.setLoadingStatus(false)
+                    view.setEmptyStateVisibility(false)
                 }
             }
         }
@@ -43,23 +48,26 @@ class TodoListPresenter(
         view.setLoadingStatus(true)
         scope.launch {
             try {
-                val todos = dataSource.deleteTodo(todo)
-                scope.launch (Dispatchers.Main){
-                    if (!todos.equals(1)) {
+                val result = dataSource.deleteTodo(todo)
+                scope.launch(Dispatchers.Main) {
+                    //check if delete success
+                    if (result.equals(1)) {
+                        //delete success
                         view.onDeleteDataSuccess()
                     } else {
+                        //delete failed
                         view.onDeleteDataFailed()
                     }
                     view.setLoadingStatus(false)
                 }
             } catch (e: Exception) {
-                scope.launch (Dispatchers.Main){
+                scope.launch(Dispatchers.Main) {
+                    //when getting data is error
                     view.onDeleteDataFailed()
                     view.setLoadingStatus(false)
                 }
             }
         }
     }
-
 
 }
