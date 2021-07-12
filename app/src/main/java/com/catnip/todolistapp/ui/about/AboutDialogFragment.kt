@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
 import com.bumptech.glide.Glide
 import com.catnip.todolistapp.R
+import com.catnip.todolistapp.data.constant.Constant
 import com.catnip.todolistapp.databinding.FragmentAboutDialogBinding
 
 class AboutDialogFragment : DialogFragment() {
@@ -32,13 +33,13 @@ class AboutDialogFragment : DialogFragment() {
         dialog?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT));
         context?.let {
             Glide.with(it)
-                .load("https://avatars.githubusercontent.com/u/21256595?v=4")
+                .load(Constant.URL_PHOTO_PROFILE)
                 .circleCrop()
                 .into(binding.ivImageProfile)
         }
         binding.btnRedirectGithub.setOnClickListener{
             val intent = Intent(Intent.ACTION_VIEW)
-            intent.data = Uri.parse("https://github.com/hermasyp")
+            intent.data = Uri.parse(Constant.URL_GITHUB)
             startActivity(intent)
         }
     }

@@ -4,9 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.detail.DetailTaskActivity">
+    tools:context=".ui.detail.DetailTodoActivity">
 
-    <FrameLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/fl_header_task"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -32,12 +32,14 @@
             android:id="@+id/tv_title_task"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
             android:layout_margin="16dp"
             android:ellipsize="end"
             android:maxLines="1"
             android:textColor="@color/white"
             android:textSize="22sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
             tools:text="Avenger" />
 
         <ImageView
@@ -46,21 +48,37 @@
             android:layout_height="30dp"
             android:layout_gravity="end"
             android:layout_margin="16dp"
+            app:layout_constraintRight_toLeftOf="@+id/iv_edit_todo"
+            app:layout_constraintTop_toTopOf="parent"
             android:src="@drawable/ic_share" />
-    </FrameLayout>
+        <ImageView
+            android:id="@+id/iv_edit_todo"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="end"
+            android:layout_margin="16dp"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:src="@drawable/ic_edit" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <TextView
-        android:id="@+id/tv_desc_task"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_margin="16dp"
-        android:textColor="@color/black"
-        android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/fl_header_task"
-        tools:text="This is a description" />
+        app:layout_constraintTop_toBottomOf="@id/fl_header_task">
+
+        <TextView
+            android:id="@+id/tv_desc_task"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            tools:text="This is a description" />
+    </ScrollView>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab"
