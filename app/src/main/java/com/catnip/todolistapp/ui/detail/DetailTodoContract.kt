@@ -24,7 +24,7 @@ interface DetailTodoContract {
         fun getData()
     }
 
-    interface Presenter : BaseContract.BasePresenter {
+    interface ViewModel {
         fun getDetailTodo(todoId: Int)
         fun changeStatusTodo(todo: Todo)
     }

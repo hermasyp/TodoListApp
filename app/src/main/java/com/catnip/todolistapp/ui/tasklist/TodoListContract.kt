@@ -28,7 +28,7 @@ interface TodoListContract {
         //initialize list
         fun initList()
     }
-    interface Presenter : BaseContract.BasePresenter{
+    interface ViewModel{
         fun getTodoByCompleteness(isTaskComplete : Boolean)
         fun deleteTodo(todo: Todo)
     }

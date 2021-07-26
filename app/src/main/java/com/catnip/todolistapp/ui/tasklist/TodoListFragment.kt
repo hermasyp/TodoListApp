@@ -10,6 +10,8 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.catnip.todolistapp.R
+import com.catnip.todolistapp.base.GenericViewModelFactory
+import com.catnip.todolistapp.base.Resource
 import com.catnip.todolistapp.data.constant.Constant
 import com.catnip.todolistapp.data.local.room.TodoRoomDatabase
 import com.catnip.todolistapp.data.local.room.datasource.TodoDataSource
@@ -24,8 +26,7 @@ class TodoListFragment : Fragment(), TodoListContract.View {
     private var isFilteredByTaskStatus: Boolean = false
     private lateinit var binding: FragmentTaskListBinding
     private lateinit var adapter: TodoAdapter
-    private lateinit var presenter: TodoListContract.Presenter
-
+    private lateinit var viewModel: TodoListViewModel
 
     companion object {
         private const val ARG_FILTERED_TASK = "ARG_FILTERED_TASK"
@@ -65,13 +66,8 @@ class TodoListFragment : Fragment(), TodoListContract.View {
         getData()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        presenter.onDestroy()
-    }
-
     override fun getData() {
-        presenter.getTodoByCompleteness(isFilteredByTaskStatus)
+        viewModel.getTodoByCompleteness(isFilteredByTaskStatus)
     }
 
     override fun onDataSuccess(todos: List<Todo>) {
@@ -122,12 +118,49 @@ class TodoListFragment : Fragment(), TodoListContract.View {
     }
 
     override fun initView() {
-        context?.let {
-            val dataSource = TodoDataSource(TodoRoomDatabase.getInstance(it).todoDao())
-            presenter = TodoListPresenter(dataSource, this@TodoListFragment)
-        }
+        initViewModel()
         initSwipeRefresh()
         initList()
+    }
+
+    override fun initViewModel() {
+        context?.let {
+            val dataSource = TodoDataSource(TodoRoomDatabase.getInstance(it).todoDao())
+            val repository = TodoListRepository(dataSource)
+            viewModel =
+                GenericViewModelFactory(TodoListViewModel(repository)).create(TodoListViewModel::class.java)
+        }
+        viewModel.todoData.observe(viewLifecycleOwner, {
+            when (it) {
+                is Resource.Loading -> {
+                    setLoadingStatus(true)
+                    setEmptyStateVisibility(false)
+                }
+                is Resource.Success -> {
+                    setLoadingStatus(false)
+                    it.data?.let { data ->
+                        if(data.isNullOrEmpty()){
+                            onDataEmpty()
+                            setEmptyStateVisibility(true)
+                        }else{
+                            onDataSuccess(data)
+                        }
+                    }
+                }
+                is Resource.Error -> {
+                    setLoadingStatus(false)
+                    setEmptyStateVisibility(false)
+                    onDataFailed(it.message.orEmpty())
+                }
+            }
+        })
+        viewModel.deleteResponse.observe(viewLifecycleOwner, { isSuccessDelete ->
+            if(isSuccessDelete){
+                onDeleteDataSuccess()
+            }else{
+                onDeleteDataFailed()
+            }
+        })
     }
 
 
@@ -144,7 +177,7 @@ class TodoListFragment : Fragment(), TodoListContract.View {
             builder.apply {
                 setTitle("Do you want to delete \"${todo.title}\" ?")
                 setPositiveButton(R.string.text_dialog_delete_task_positive) { dialog, id ->
-                    presenter.deleteTodo(todo)
+                    viewModel.deleteTodo(todo)
                     dialog?.dismiss()
                 }
                 setNegativeButton(R.string.text_dialog_delete_task_negative) { dialog, id ->

@@ -8,7 +8,7 @@ Written with love by Muhammad Hermas Yuda Pamungkas
 Github : https://github.com/hermasyp
  **/
 interface TodoFormContract {
-    interface Presenter : BaseContract.BasePresenter {
+    interface ViewModel {
         fun insertTodo(todo: Todo)
         fun updateTodo(todo: Todo)
     }

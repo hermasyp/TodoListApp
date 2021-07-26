@@ -4,22 +4,24 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
-import com.catnip.todolistapp.App
 import com.catnip.todolistapp.R
+import com.catnip.todolistapp.base.GenericViewModelFactory
+import com.catnip.todolistapp.base.Resource
 import com.catnip.todolistapp.data.constant.Constant
 import com.catnip.todolistapp.data.local.room.TodoRoomDatabase
 import com.catnip.todolistapp.data.local.room.datasource.TodoDataSource
 import com.catnip.todolistapp.data.model.Todo
 import com.catnip.todolistapp.databinding.ActivityDetailTaskBinding
+import com.catnip.todolistapp.ui.tasklist.TodoListViewModel
 import com.catnip.todolistapp.ui.todoform.TodoFormActivity
 import com.catnip.todolistapp.utils.ShareUtils
 import com.google.android.material.snackbar.Snackbar
 
 
-class DetailTodoActivity : AppCompatActivity(),DetailTodoContract.View {
+class DetailTodoActivity : AppCompatActivity(), DetailTodoContract.View {
     private lateinit var binding: ActivityDetailTaskBinding
-    private lateinit var presenter: DetailTodoContract.Presenter
-    private var todoId : Int? = -1
+    private lateinit var viewModel: DetailTodoViewModel
+    private var todoId: Int? = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,10 +29,10 @@ class DetailTodoActivity : AppCompatActivity(),DetailTodoContract.View {
     }
 
     private fun getIntentData() {
-        todoId = intent?.getIntExtra(Constant.EXTRAS_DATA_TODO,-1)
+        todoId = intent?.getIntExtra(Constant.EXTRAS_DATA_TODO, -1)
     }
 
-    private fun bindData(todo : Todo?) {
+    private fun bindData(todo: Todo?) {
         supportActionBar?.hide()
         binding.tvDescTask.text = todo?.desc
         binding.tvTitleTask.text = todo?.title
@@ -45,15 +47,15 @@ class DetailTodoActivity : AppCompatActivity(),DetailTodoContract.View {
         setFabIcon(todo)
         binding.fab.setOnClickListener {
             todo?.let {
-                presenter.changeStatusTodo(it)
+                viewModel.changeStatusTodo(it)
             }
         }
         binding.ivEditTodo.setOnClickListener {
-            TodoFormActivity.startActivity(this,TodoFormActivity.MODE_EDIT,todo)
+            TodoFormActivity.startActivity(this, TodoFormActivity.MODE_EDIT, todo)
         }
     }
 
-    private fun setFabIcon(todo : Todo?) {
+    private fun setFabIcon(todo: Todo?) {
         binding.fab.setImageResource(if (todo?.isTaskCompleted == true) R.drawable.ic_task_done_true else R.drawable.ic_task_done_false)
     }
 
@@ -65,8 +67,8 @@ class DetailTodoActivity : AppCompatActivity(),DetailTodoContract.View {
         Toast.makeText(this, "Get Data Failed for id $todoId", Toast.LENGTH_SHORT).show()
     }
 
-    override fun onChangeTodoStatusSuccess(todo: Todo) {
-        bindTodoData(todo)
+    override fun onChangeTodoStatusSuccess(todo : Todo) {
+        getData()
         if (todo.isTaskCompleted) {
             Snackbar.make(binding.root, "Success Set Todo to Done", Snackbar.LENGTH_SHORT)
                 .show()
@@ -85,7 +87,7 @@ class DetailTodoActivity : AppCompatActivity(),DetailTodoContract.View {
     }
 
     override fun getData() {
-        todoId?.let { presenter.getDetailTodo(it) }
+        todoId?.let { viewModel.getDetailTodo(it) }
     }
 
     override fun initView() {
@@ -93,14 +95,40 @@ class DetailTodoActivity : AppCompatActivity(),DetailTodoContract.View {
         setContentView(binding.root)
         supportActionBar?.hide()
         getIntentData()
-        //initialize presenter
-        val dataSource = TodoDataSource(TodoRoomDatabase.getInstance(this).todoDao())
-        presenter = DetailTodoPresenter(dataSource,this)
+        //initialize viewmodel
+        initViewModel()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        presenter.onDestroy()
+    override fun initViewModel() {
+        val dataSource = TodoDataSource(TodoRoomDatabase.getInstance(this).todoDao())
+        val repository = DetailTodoRepository(dataSource)
+        viewModel = GenericViewModelFactory(DetailTodoViewModel(repository)).create(
+            DetailTodoViewModel::class.java
+        )
+        viewModel.detailTodoData.observe(this, {
+            when (it) {
+                is Resource.Loading -> {
+                }
+                is Resource.Success -> {
+                    it.data?.let { data ->
+                        onFetchDetailSuccess(data)
+                    }
+                }
+                is Resource.Error -> {
+                    onFetchDetailFailed()
+                }
+            }
+        })
+        viewModel.changeStatusTodoResult.observe(this,{
+            if(it.first){
+                it.second?.let { todo ->
+                    onChangeTodoStatusSuccess(todo)
+                }
+            }else{
+                onChangeTodoStatusFailed()
+            }
+        })
+
     }
 
     override fun onResume() {

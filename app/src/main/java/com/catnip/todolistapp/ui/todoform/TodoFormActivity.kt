@@ -7,6 +7,7 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.catnip.todolistapp.R
+import com.catnip.todolistapp.base.GenericViewModelFactory
 import com.catnip.todolistapp.data.local.room.TodoRoomDatabase
 import com.catnip.todolistapp.data.local.room.datasource.TodoDataSource
 import com.catnip.todolistapp.data.model.Todo
@@ -19,7 +20,7 @@ import com.catnip.todolistapp.databinding.ActivityTodoFormBinding
 * */
 class TodoFormActivity : AppCompatActivity(), TodoFormContract.View {
     private lateinit var binding: ActivityTodoFormBinding
-    private lateinit var presenter: TodoFormContract.Presenter
+    private lateinit var viewModel: TodoFormViewModel
     private var formMode: Int = MODE_INSERT
     private var todo: Todo? = null
 
@@ -73,7 +74,7 @@ class TodoFormActivity : AppCompatActivity(), TodoFormContract.View {
                     desc = binding.etTaskDesc.text.toString()
                     imgHeaderUrl = binding.etTaskHeaderImg.text.toString()
                 }
-                todo?.let { presenter.updateTodo(it) }
+                todo?.let { viewModel.updateTodo(it) }
             } else {
                 //do insert
                 todo = Todo(
@@ -81,7 +82,7 @@ class TodoFormActivity : AppCompatActivity(), TodoFormContract.View {
                     desc = binding.etTaskDesc.text.toString(),
                     imgHeaderUrl = binding.etTaskHeaderImg.text.toString(),
                 )
-                todo?.let { presenter.insertTodo(it) }
+                todo?.let { viewModel.insertTodo(it) }
             }
         }
     }
@@ -121,11 +122,6 @@ class TodoFormActivity : AppCompatActivity(), TodoFormContract.View {
         return isFormValid
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        presenter.onDestroy()
-    }
-
     override fun onSuccess() {
         //when save data success
         Toast.makeText(this, "Save todo Success!", Toast.LENGTH_SHORT).show()
@@ -144,9 +140,7 @@ class TodoFormActivity : AppCompatActivity(), TodoFormContract.View {
     }
 
     override fun initializeForm() {
-        //initialize presenter
-        val dataSource = TodoDataSource(TodoRoomDatabase.getInstance(this).todoDao())
-        presenter = TodoFormPresenter(dataSource, this)
+        initViewModel()
         //preset data when form mode is edit mode
         if (formMode == MODE_EDIT) {
             todo?.let {
@@ -170,6 +164,22 @@ class TodoFormActivity : AppCompatActivity(), TodoFormContract.View {
         getIntentData()
         //initialize form if edit or insert
         initializeForm()
+    }
+
+    override fun initViewModel() {
+        val dataSource = TodoDataSource(TodoRoomDatabase.getInstance(this).todoDao())
+        val repository = TodoFormRepository(dataSource)
+        viewModel =
+            GenericViewModelFactory(TodoFormViewModel(repository)).create(TodoFormViewModel::class.java)
+
+        viewModel.transactionResult.observe(this, { isTransactionSuccess ->
+            if (isTransactionSuccess) {
+                onSuccess()
+            } else {
+                onFailed()
+            }
+        })
+
     }
 
 

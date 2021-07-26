@@ -25,14 +25,6 @@ class TodoDataSource(private val todoDao: TodoDao) {
         return todoDao.updateTodo(todo)
     }
 
-    suspend fun changeTodoStatus(todo: Todo): Todo {
-        val updatedTodo = todo.copy().apply {
-            this.isTaskCompleted = isTaskCompleted.not()
-        }
-        todoDao.updateTodo(updatedTodo)
-        return getTodoById(todo.id)
-    }
-
     suspend fun getTodoByCompleteness(isTaskCompleted: Boolean): List<Todo> {
         return todoDao.getTodoByCompleteness(isTaskCompleted)
     }
